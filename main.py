@@ -8,7 +8,7 @@ from wx.lib.plot import PlotCanvas, PlotGraphics, PolyLine, PolyMarker
 
 b=1.0
 a=4*b
-st=4*b
+st=1*b
 c=a+st
 G=1.67
 lbd=8332.2
@@ -45,6 +45,21 @@ def polint(bt):
 
     return integrate.quad(integrand, a, c, args=(bt),limit=100)[0]
 
+def polint2(bt):
+    global a,c,pol
+    summ=0
+    for j in range(0,len(pol)):
+        sum2=0
+        for i in range(0,j):
+            sum2+=pohgamer(j,i)/(bt**(1+i))*(-1)*(i/2)*(c**(j-i)*sin(bt*c+(pi/2)**(i%2))-a**(j-i)*sin(bt*a+(pi/2)**(i%2)))
+        summ+=pol[j]*sum2
+    return summ
+
+def pohgamer(j,i):
+    poh=1
+    for k in range(0,i):
+        poh=poh*(j+1-i+k)
+    return poh
 
 def integr2(x):#int  d bt
     global a,st
@@ -84,28 +99,34 @@ def drawSinCosWaves():
 
 
     return PlotGraphics([sigma],"Graph Title", "X Axis", "Y Axis")
- 
+
+ID_LOAD=wx.NewId()
+ID_INTERVAL=wx.NewId()
+ID_MATERIAL=wx.NewId()
+ID_COND=wx.NewId()
+ID_MAIN_PANEL=wx.NewId()
+ID_MAIN_FRAME=wx.NewId()
+ID_REFRESH=wx.NewId()
 ########################################################################
 class MyGraph(wx.Frame):
  
     #----------------------------------------------------------------------
     def __init__(self):
-        wx.Frame.__init__(self, None, wx.ID_ANY, 
+        wx.Frame.__init__(self, None, ID_MAIN_FRAME,
                           'MyStressPlot')
  
         # Add a panel so it looks the correct on all platforms
-        panel = wx.Panel(self, wx.ID_ANY)
+        panel = wx.Panel(self, ID_MAIN_PANEL)
 
         # Add menu
         menuBar = wx.MenuBar()
         menu1=wx.Menu()
-        menu1.Append(wx.ID_ANY, "Set load", "")
-        menu1.Append(wx.ID_ANY, "Set interval", "")
-        menu1.Append(wx.ID_ANY, "Set material", "")
-        menu1.Append(wx.ID_ANY, "Set border conditions", "")
+        menu1.Append(ID_LOAD, "Set load", "")
+        menu1.Append(ID_INTERVAL, "Set interval", "")
+        menu1.Append(ID_MATERIAL, "Set material", "")
+        menu1.Append(ID_COND, "Set border conditions", "")
+        menu1.Append(ID_REFRESH, "Refresh plot", "")
         menuBar.Append(menu1, "&Settings")
-        menu2=wx.Menu()
-        menuBar.Append(menu2, "&Redraw")
 
 
         # create some sizers
@@ -128,7 +149,13 @@ class MyGraph(wx.Frame):
         panel.SetSizer(mainSizer)
 
         self.SetMenuBar(menuBar)
- 
+
+        wx.EVT_MENU(self, ID_REFRESH, self.ReDraw)
+
+        wx.EVT_MENU(self, ID_LOAD, self.ChangeLoad)
+        wx.EVT_MENU(self, ID_INTERVAL, self.ChangeInterval)
+        wx.EVT_MENU(self, ID_MATERIAL, self.ChangeMaterial)
+        wx.EVT_MENU(self, ID_COND, self.ChangeBound)
     #----------------------------------------------------------------------
     def onToggleGrid(self, event):
         """"""
@@ -138,9 +165,70 @@ class MyGraph(wx.Frame):
     def onToggleLegend(self, event):
         """"""
         self.canvas.SetEnableLegend(event.IsChecked())
+
+    def ReDraw(self,event):
+        self.Show(False)
+        self.canvas.Draw(drawSinCosWaves())
+        self.Show(True)
+
+    def ChangeBound(self,event):
+        
+        self.Show(False)
+        self.canvas.Draw(drawSinCosWaves())
+        self.Show(True)
+
+    def ChangeMaterial(self,event):
+        dlg = wx.TextEntryDialog(parent=None, message="Write dead load, Young's modulus and Poisson's ratio, separated with space:", defaultValue='')
+        dlg.ShowModal()
+        result = dlg.GetValue()
+        dlg.Destroy()
+        bor=result.split()
+        global lbd, G, ym, kp
+        ym=float(bor[0])
+        E=float(bor[1])
+        mu=float(bor[2])
+        G=E/(2*(1-mu))
+        lbd=mu*E/((1+mu)*(1-2*mu))
+        kp=3-4*mu
+        self.Show(False)
+        self.canvas.Draw(drawSinCosWaves())
+        self.Show(True)
+
+    def ChangeLoad(self,event):
+        dlg = wx.TextEntryDialog(parent=None, message="Write polinom's coefficients, separated with space (starting with lowest power):", defaultValue='')
+        dlg.ShowModal()
+        result = dlg.GetValue()
+        dlg.Destroy()
+        bor=result.split()
+        global pol
+        l=[]
+        for i in range(0,len(bor)):
+            l.append(float(bor[i])*b)
+        pol=l
+        self.Show(False)
+        self.canvas.Draw(drawSinCosWaves())
+        self.Show(True)
+
+    def ChangeInterval(self,event):
+        dlg = wx.TextEntryDialog(parent=None, message='Write interval borders, separated with space:', defaultValue='')
+        dlg.ShowModal()
+        result = dlg.GetValue()
+        dlg.Destroy()
+        bor=result.split()
+        global a,c,st
+        a=float(bor[0])*b
+        c=float(bor[1])*b
+        st=c-a
+        self.Show(False)
+        self.canvas.Draw(drawSinCosWaves())
+        self.Show(True)
+
+
+
  
 if __name__ == '__main__':
     app = wx.App(False)
     frame = MyGraph()
     frame.Show()
+    app.SetTopWindow(frame)
     app.MainLoop()
