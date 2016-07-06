@@ -107,6 +107,7 @@ ID_COND=wx.NewId()
 ID_MAIN_PANEL=wx.NewId()
 ID_MAIN_FRAME=wx.NewId()
 ID_REFRESH=wx.NewId()
+ID_WEIGHT=wx.NewId()
 ########################################################################
 class MyGraph(wx.Frame):
  
@@ -124,7 +125,8 @@ class MyGraph(wx.Frame):
         menu1.Append(ID_LOAD, "Set load", "")
         menu1.Append(ID_INTERVAL, "Set interval", "")
         menu1.Append(ID_MATERIAL, "Set material", "")
-        menu1.Append(ID_COND, "Set border conditions", "")
+        menu1.Append(ID_COND, "Set boundary conditions", "")
+        menu1.Append(ID_WEIGHT, "Set or remove dead weight", "")
         menu1.Append(ID_REFRESH, "Refresh plot", "")
         menuBar.Append(menu1, "&Settings")
 
@@ -156,6 +158,7 @@ class MyGraph(wx.Frame):
         wx.EVT_MENU(self, ID_INTERVAL, self.ChangeInterval)
         wx.EVT_MENU(self, ID_MATERIAL, self.ChangeMaterial)
         wx.EVT_MENU(self, ID_COND, self.ChangeBound)
+        wx.EVT_MENU(self, ID_WEIGHT, self.ChangeWeight)
     #----------------------------------------------------------------------
     def onToggleGrid(self, event):
         """"""
@@ -171,8 +174,29 @@ class MyGraph(wx.Frame):
         self.canvas.Draw(drawSinCosWaves())
         self.Show(True)
 
+    def ChangeWeight(self,event):
+        dlg = wx.TextEntryDialog(parent=None, message="Write 1 to disable weight and 2 to enable weight", defaultValue='')
+        dlg.ShowModal()
+        result = dlg.GetValue()
+        dlg.Destroy()
+        bor=result.split()
+        global var2
+        var2=int(bor[0])
+
+        self.Show(False)
+        self.canvas.Draw(drawSinCosWaves())
+        self.Show(True)
+
+
     def ChangeBound(self,event):
-        
+        dlg = wx.TextEntryDialog(parent=None, message="Write 1 for condition of fixed and 2 for smooth conditions", defaultValue='')
+        dlg.ShowModal()
+        result = dlg.GetValue()
+        dlg.Destroy()
+        bor=result.split()
+        global var
+        var=int(bor[0])
+
         self.Show(False)
         self.canvas.Draw(drawSinCosWaves())
         self.Show(True)
