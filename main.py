@@ -20,9 +20,8 @@ def integr(x):
     global a,st
     var=1
     def integrand(bt, x, var):
-        #global a, st, G, lbd, ym, kp, c
+        global a, st, G, lbd, ym, kp, c
         d=10
-        #fun=sin(bt)+x
         fun=polint(bt)*cos(bt*x)*(lbd+2*G)*(exp(bt*b)*(kp**2-1-2.*bt*b+2.*kp*bt*b)+exp(-bt*b)*(kp**2-1+2*bt*b-2*kp*bt*b))/((kp-1)*(lbd*(kp*exp(2*bt*b)+kp*exp(-2.*bt*b)+2)+G*kp*(exp(2*bt*b)+exp(-2*bt*b)))+2*G*(kp**2+kp+4*bt**2*b**2-2))
         return fun
 
@@ -61,22 +60,10 @@ def drawSinCosWaves():
     err=np.arange(xv.shape[0])
     for i in range(0,xv.shape[0]):
         x=xv[i,0]
-        #var=1
-        #print x
-        #fun=lambda bt: um.cos(bt*x[i])*(um.sin(bt*c)-um.sin(bt*a))*(lbd+2*G)*(um.exp(bt*b)*(kp**2-1-2.*bt*b+2.*kp*bt*b)+um.exp(-bt*b)*(kp**2-1+2*bt*b-2*kp*bt*b))/bt/((kp-1)*(lbd*(kp*um.exp(2*bt*b)+kp*um.exp(-2.*bt*b)+2)+G*kp*(um.exp(2*bt*b)+um.exp(-2*bt*b)))+2*G*(kp**2+kp+4*bt**2*b**2-2))
-        #nagr[i]=-2*d/um.pi/G*integrate.quad(fun,0,100)[0]
-        #nagr[i],err[i]=integrate.quad(integrand,-5,5,args=(x,var))
-        #nagr[i],err[i]=integrate.quad(lambda bt: sin(bt), 0,5)
-
-        #xv[i,1]=integrate.quad(lambda bt: sin(bt)*x, 0,5)[0]
-        #nagr[i]=-2*d/pi/G*integr2(x)[0]
         nagr[i]=-2/pi/G*integr(x)[0]
-
-        #nagr[i]=polint(x)[0]
 
 
     xv[:,1]=nagr
-    #xv[:,1]=sin(xv[:,0])
     sigma = PolyLine(xv, legend= 'Normal stress', colour='red')
 
 
