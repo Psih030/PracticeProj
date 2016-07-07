@@ -2,10 +2,8 @@ import numpy as np
 from numpy.core.umath import sin, cos, pi, exp, sinh
 import scipy.integrate as integrate
 import wx
-
 from wx.lib.plot import PlotCanvas, PlotGraphics, PolyLine
-
-b=1.0
+b=np.float64(1.0)
 a=4*b
 st=1*b
 c=a+st
@@ -13,8 +11,8 @@ G=1.67
 lbd=8332.2
 ym=15
 kp=1.0004
-pol=[1,2,3,4]
-var=2
+pol=[10]
+var=1
 var2=1
 
 def integr(x):
@@ -22,14 +20,14 @@ def integr(x):
     var=1
     def integrand(bt, x):
         global a, st, G, lbd, ym, kp, c, var
-        fun=-3
+        fun=-1
         if var==1:
-            fun=polint(bt)*cos(bt*x)*(lbd+2*G)*(exp(bt*b)*(kp**2-1-2.*bt*b+2.*kp*bt*b)+exp(-bt*b)*(kp**2-1+2*bt*b-2*kp*bt*b))/((kp-1)*(lbd*(kp*exp(2*bt*b)+kp*exp(-2.*bt*b)+2)+G*kp*(exp(2*bt*b)+exp(-2*bt*b)))+2*G*(kp**2+kp+4*bt**2*b**2-2))
+            fun=polint(bt)*cos(bt*x)*(lbd+2*G)*(exp(bt*b)*(kp**2-1-2*bt*b+2*kp*bt*b)+exp(-bt*b)*(kp**2-1+2*bt*b-2*kp*bt*b))/((kp-1)*(lbd*(kp*exp(2*bt*b)+kp*exp(-2*bt*b)+2)+G*kp*(exp(2*bt*b)+exp(-2*bt*b)))+2*G*(kp**2+kp+4*bt**2 * b **2 -2))
         elif var==2:
-            fun=polint(bt)*(G*(exp(bt*b)*(kp**2-kp+2*kp*bt*b)-exp(-bt*b)*(kp**2-kp-2*kp*bt*b))+lbd*(kp**2-kp)*(exp(bt*b)-exp(-bt*b)))*cos(bt*x)/((kp**2-kp)*(lbd+G)*sinh(2*bt*b)+4*kp*G*b*bt);
+            fun=polint(bt)*(G*(exp(bt*b)*(kp**2-kp+2*kp*bt*b)-exp(-bt*b)*(kp**2-kp-2*kp*bt*b))+lbd*(kp**2-kp)*(exp(bt*b)-exp(-bt*b)))*cos(bt*x)/((kp**2-kp)*(lbd+G)*sinh(2*bt*b)+4*kp*G*b*bt)
         return fun
 
-    return integrate.quad(integrand, 0,7,args=(x),limit=30)
+    return integrate.quad(integrand, 0,7,args=(x),limit=70,epsrel=1.49e-015)
 
 
 def polint(bt):
@@ -42,7 +40,7 @@ def polint(bt):
         fun=fun*cos(bt*ksi)
         return fun
 
-    return integrate.quad(integrand, a, c, args=(bt),limit=100)[0]
+    return integrate.quad(integrand, a, c, args=(bt),limit=100,epsrel=1.49e-015)[0]
 
 def polint2(bt):
     global a,c,pol
@@ -60,23 +58,6 @@ def pohgamer(j,i):
         poh=poh*(j+1-i+k)
     return poh
 
-def integr2(x):#int  d bt
-    global a,st
-    var=2
-    def integrand(bt, x):
-        global a, st, G, lbd, ym, kp, c, var
-        fun=-3
-        if var == 1:
-            fun=cos(bt*x)*(sin(bt*c)-sin(bt*a))*(lbd+2*G)*(exp(bt*b)*(kp**2-1-2.*bt*b+2.*kp*bt*b)+exp(-bt*b)*(kp**2-1+2*bt*b-2*kp*bt*b))/bt/((kp-1)*(lbd*(kp*exp(2*bt*b)+kp*exp(-2.*bt*b)+2)+G*kp*(exp(2*bt*b)+exp(-2*bt*b)))+2*G*(kp**2+kp+4*bt**2*b**2-2))
-        elif var ==2:
-            fun=(G*(exp(bt*b)*(kp**2-kp+2*kp*bt*b)-exp(-bt*b)*(kp**2-kp-2*kp*bt*b))+lbd*(kp**2-kp)*(exp(bt*b)-exp(-bt*b)))*cos(bt*x)/bt*(sin(bt*c)-sin(bt*a))/((kp**2-kp)*(lbd+G)*sinh(2*bt*b)+4*kp*G*b*bt);
-        return fun
-
-    #return integrate.quadrature(integrand, 0,7,args=(x))
-    return integrate.quad(integrand, 0,7,args=(x),limit=30)
-
-
-
 
 def drawSinCosWaves():
     d=10000
@@ -86,8 +67,7 @@ def drawSinCosWaves():
     xv.shape=(xv.size/2, 2)
     nagr=np.arange(xv.shape[0])
     for i in range(0,xv.shape[0]):
-        x=xv[i,0]
-        #nagr[i]=-2*d/pi/G*integr2(x)[0]
+        x=np.float64(xv[i,0])
         nagr[i]=-2/pi/G*integr(x)[0]
 
     if var2==1:
@@ -147,11 +127,9 @@ class MyChild(wx.Frame):
         if var2==2:
             self.rboxm.SetStringSelection("yes")
 
-        # Set sizer for the frame, so we can change frame size to match widgets
         self.windowSizer = wx.BoxSizer()
         self.windowSizer.Add(self.panel, 1, wx.ALL | wx.EXPAND)
 
-        # Set sizer for the panel content
         self.sizer = wx.GridBagSizer(10, 10)
         self.sizer.Add(self.quotea, (0, 0))
         self.sizer.Add(self.edita, (0, 1))
@@ -171,15 +149,12 @@ class MyChild(wx.Frame):
         self.sizer.Add(self.rboxm, (8, 1))
         self.sizer.Add(self.button, (9, 0), (1, 2), flag=wx.EXPAND)
 
-        # Set simple sizer for a nice border
         self.border = wx.BoxSizer()
         self.border.Add(self.sizer, 1, wx.ALL | wx.EXPAND, 5)
 
-        # Use the sizers
         self.panel.SetSizerAndFit(self.border)
         self.SetSizerAndFit(self.windowSizer)
 
-        # Set event handlers
         self.button.Bind(wx.EVT_BUTTON, self.OnButton)
 
     def OnButton(self,event):
@@ -225,18 +200,15 @@ ID_REFRESH=wx.NewId()
 ID_WEIGHT=wx.NewId()
 ID_SIDE_PANEL=wx.NewId()
 ID_SET_ALL=wx.NewId()
-########################################################################
+
 class MyGraph(wx.Frame):
- 
-    #----------------------------------------------------------------------
+
     def __init__(self):
         wx.Frame.__init__(self, None, ID_MAIN_FRAME,
                           'MyStressPlot')
 
-        # Add a panel so it looks the correct on all platforms
         panel = wx.Panel(self, ID_MAIN_PANEL)
 
-        # Add menu
         menuBar = wx.MenuBar()
         menu1=wx.Menu()
         menu1.Append(ID_LOAD, "Set load", "")
@@ -251,11 +223,9 @@ class MyGraph(wx.Frame):
         menuBar.Append(menu2, "&Settings2")
 
 
-        # create some sizers
         mainSizer = wx.BoxSizer(wx.VERTICAL)
         checkSizer = wx.BoxSizer(wx.HORIZONTAL)
- 
-        # create the widgets
+
         self.canvas = PlotCanvas(panel)
         self.canvas.Draw(drawSinCosWaves())
         toggleGrid = wx.CheckBox(panel, label="Show Grid")
@@ -263,8 +233,7 @@ class MyGraph(wx.Frame):
         toggleLegend = wx.CheckBox(panel, label="Show Legend")
         toggleLegend.Bind(wx.EVT_CHECKBOX, self.onToggleLegend)
 
- 
-        # layout the widgets
+
         mainSizer.Add(self.canvas, 1, wx.EXPAND)
         checkSizer.Add(toggleGrid, 0, wx.ALL, 5)
         checkSizer.Add(toggleLegend, 0, wx.ALL, 5)
@@ -288,14 +257,10 @@ class MyGraph(wx.Frame):
         self.Child.Show()
 
 
-    #----------------------------------------------------------------------
     def onToggleGrid(self, event):
-        """"""
         self.canvas.SetEnableGrid(event.IsChecked())
- 
-    #----------------------------------------------------------------------
+
     def onToggleLegend(self, event):
-        """"""
         self.canvas.SetEnableLegend(event.IsChecked())
 
     def ReDraw(self,event):
@@ -376,9 +341,6 @@ class MyGraph(wx.Frame):
         self.canvas.Draw(drawSinCosWaves())
         self.Show(True)
 
-
-
- 
 if __name__ == '__main__':
     app = wx.App(False)
     frame = MyGraph()
