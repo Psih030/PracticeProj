@@ -1,10 +1,9 @@
 import numpy as np
 from numpy.core.umath import sin, cos, pi, exp, sinh
 import scipy.integrate as integrate
-import scipy as sc
 import wx
 
-from wx.lib.plot import PlotCanvas, PlotGraphics, PolyLine, PolyMarker
+from wx.lib.plot import PlotCanvas, PlotGraphics, PolyLine
 
 b=1.0
 a=4*b
@@ -15,7 +14,7 @@ lbd=8332.2
 ym=15
 kp=1.0004
 pol=[1,2,3,4]
-var=1
+var=2
 var2=1
 
 def integr(x):
@@ -100,6 +99,122 @@ def drawSinCosWaves():
 
     return PlotGraphics([sigma],"Graph Title", "X Axis", "Y Axis")
 
+class MyChild(wx.Frame):
+    def __init__(self,parent):
+        wx.Frame.__init__(self, None, title="InfoFrame")
+        self.parent=parent
+        self.panel=wx.Panel(self)
+        self.quotea = wx.StaticText(self.panel, label="a=")
+        self.edita = wx.TextCtrl(self.panel, size=(140, -1), value=str(a))
+
+        self.quotec = wx.StaticText(self.panel, label="c=")
+        self.editc = wx.TextCtrl(self.panel, size=(140, -1), value=str(c))
+
+        self.quoteE = wx.StaticText(self.panel, label="E=")
+        self.editE = wx.TextCtrl(self.panel, size=(140, -1))
+
+        self.quotem = wx.StaticText(self.panel, label="mu=")
+        self.editm = wx.TextCtrl(self.panel, size=(140, -1))
+
+        self.quoteg = wx.StaticText(self.panel, label="gamma=")
+        self.editg = wx.TextCtrl(self.panel, size=(140, -1), value=str(ym))
+
+        self.quoteG = wx.StaticText(self.panel, label="G="+str(G))
+
+        self.quotel = wx.StaticText(self.panel, label="lambda="+str(lbd))
+
+        strp=""
+        for i in range(0,len(pol)):
+            strp+=str(pol[i])+" "
+
+        self.quotep = wx.StaticText(self.panel, label="pol=")
+        self.editp = wx.TextCtrl(self.panel, size=(140, -1), value=strp)
+
+        self.button = wx.Button(self.panel, label="Save")
+
+
+        lblList = ['of fixed', 'of smooth']
+        self.rbox = wx.RadioBox(self.panel,label = 'Choose boundary condition',  choices = lblList , majorDimension = 1, style = wx.RA_SPECIFY_COLS)
+        if var==1:
+            self.rbox.SetStringSelection("of fixed")
+        elif var==2:
+            self.rbox.SetStringSelection("of smooth")
+
+        lblList = [ 'no','yes']
+        self.rboxm = wx.RadioBox(self.panel,label = 'Dead load?',  choices = lblList , majorDimension = 1, style = wx.RA_SPECIFY_COLS)
+        if var2==1:
+            self.rboxm.SetStringSelection("no")
+        if var2==2:
+            self.rboxm.SetStringSelection("yes")
+
+        # Set sizer for the frame, so we can change frame size to match widgets
+        self.windowSizer = wx.BoxSizer()
+        self.windowSizer.Add(self.panel, 1, wx.ALL | wx.EXPAND)
+
+        # Set sizer for the panel content
+        self.sizer = wx.GridBagSizer(10, 10)
+        self.sizer.Add(self.quotea, (0, 0))
+        self.sizer.Add(self.edita, (0, 1))
+        self.sizer.Add(self.quotec, (1, 0))
+        self.sizer.Add(self.editc, (1, 1))
+        self.sizer.Add(self.quotem, (2, 0))
+        self.sizer.Add(self.editm, (2, 1))
+        self.sizer.Add(self.quoteE, (3, 0))
+        self.sizer.Add(self.editE, (3, 1))
+        self.sizer.Add(self.quoteG, (4,0))
+        self.sizer.Add(self.quotel, (5,0))
+        self.sizer.Add(self.quoteg, (6, 0))
+        self.sizer.Add(self.editg, (6, 1))
+        self.sizer.Add(self.quotep, (7, 0))
+        self.sizer.Add(self.editp, (7, 1))
+        self.sizer.Add(self.rbox, (8, 0))
+        self.sizer.Add(self.rboxm, (8, 1))
+        self.sizer.Add(self.button, (9, 0), (1, 2), flag=wx.EXPAND)
+
+        # Set simple sizer for a nice border
+        self.border = wx.BoxSizer()
+        self.border.Add(self.sizer, 1, wx.ALL | wx.EXPAND, 5)
+
+        # Use the sizers
+        self.panel.SetSizerAndFit(self.border)
+        self.SetSizerAndFit(self.windowSizer)
+
+        # Set event handlers
+        self.button.Bind(wx.EVT_BUTTON, self.OnButton)
+
+    def OnButton(self,event):
+        global a, c, G, st, lbd, ym, pol, kp,var,var2
+        a=float(self.edita.GetValue())
+        c=float(self.editc.GetValue())
+        st=c-a
+        if self.editE.GetValue()!="":
+            E=float(self.editE.GetValue())
+        if self.editm.GetValue()!="":
+            mu=float(self.editm.GetValue())
+        ym=float(self.editg.GetValue())
+        if self.editE.GetValue()!="" and self.editm.GetValue()!="":
+            G=E/(2*(1-mu))
+            lbd=mu*E/((1+mu)*(1-2*mu))
+            kp=3-4*mu
+        pold=self.editp.GetValue().split()
+        for i in range(0,len(pold)):
+            print pold[i]
+            pol[i]=float(pold[i])
+        if self.rbox.GetStringSelection()=="of fixed":
+            var=1
+        elif self.rbox.GetStringSelection()=="of smooth":
+            var=2
+        if self.rboxm.GetStringSelection()=="no":
+            var2=1
+        elif self.rboxm.GetStringSelection()=="yes":
+            var2=2
+        self.Destroy()
+
+        tp=wx.GetApp().GetTopWindow()
+        tp.Show(False)
+        tp.canvas.Draw(drawSinCosWaves())
+        tp.Show(True)
+
 ID_LOAD=wx.NewId()
 ID_INTERVAL=wx.NewId()
 ID_MATERIAL=wx.NewId()
@@ -108,6 +223,8 @@ ID_MAIN_PANEL=wx.NewId()
 ID_MAIN_FRAME=wx.NewId()
 ID_REFRESH=wx.NewId()
 ID_WEIGHT=wx.NewId()
+ID_SIDE_PANEL=wx.NewId()
+ID_SET_ALL=wx.NewId()
 ########################################################################
 class MyGraph(wx.Frame):
  
@@ -115,7 +232,7 @@ class MyGraph(wx.Frame):
     def __init__(self):
         wx.Frame.__init__(self, None, ID_MAIN_FRAME,
                           'MyStressPlot')
- 
+
         # Add a panel so it looks the correct on all platforms
         panel = wx.Panel(self, ID_MAIN_PANEL)
 
@@ -129,6 +246,9 @@ class MyGraph(wx.Frame):
         menu1.Append(ID_WEIGHT, "Set or remove dead weight", "")
         menu1.Append(ID_REFRESH, "Refresh plot", "")
         menuBar.Append(menu1, "&Settings")
+        menu2=wx.Menu()
+        menu2.Append(ID_SET_ALL, "Set all", "")
+        menuBar.Append(menu2, "&Settings2")
 
 
         # create some sizers
@@ -142,6 +262,7 @@ class MyGraph(wx.Frame):
         toggleGrid.Bind(wx.EVT_CHECKBOX, self.onToggleGrid)
         toggleLegend = wx.CheckBox(panel, label="Show Legend")
         toggleLegend.Bind(wx.EVT_CHECKBOX, self.onToggleLegend)
+
  
         # layout the widgets
         mainSizer.Add(self.canvas, 1, wx.EXPAND)
@@ -159,6 +280,14 @@ class MyGraph(wx.Frame):
         wx.EVT_MENU(self, ID_MATERIAL, self.ChangeMaterial)
         wx.EVT_MENU(self, ID_COND, self.ChangeBound)
         wx.EVT_MENU(self, ID_WEIGHT, self.ChangeWeight)
+
+        wx.EVT_MENU(self, ID_SET_ALL, self.SetAll)
+
+    def SetAll(self,event):
+        self.Child= MyChild(self)
+        self.Child.Show()
+
+
     #----------------------------------------------------------------------
     def onToggleGrid(self, event):
         """"""
