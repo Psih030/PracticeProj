@@ -5,13 +5,13 @@ import wx
 from wx.lib.plot import PlotCanvas, PlotGraphics, PolyLine
 b=np.float64(1.0)
 a=4*b
-st=1*b
+st=2*b
 c=a+st
 G=1.67
 lbd=8332.2
 ym=15
 kp=1.0004
-pol=[10]
+pol=[1,2,3,4,5]
 var=1
 var2=1
 
@@ -27,7 +27,7 @@ def integr(x):
             fun=polint(bt)*(G*(exp(bt*b)*(kp**2-kp+2*kp*bt*b)-exp(-bt*b)*(kp**2-kp-2*kp*bt*b))+lbd*(kp**2-kp)*(exp(bt*b)-exp(-bt*b)))*cos(bt*x)/((kp**2-kp)*(lbd+G)*sinh(2*bt*b)+4*kp*G*b*bt)
         return fun
 
-    return integrate.quad(integrand, 0,7,args=(x),limit=70,epsrel=1.49e-015)
+    return integrate.quad(integrand, 0,7,args=(x),limit=70,epsabs=1.49e-08,epsrel=1.49e-08,wopts="momcom")
 
 
 def polint(bt):
@@ -40,17 +40,7 @@ def polint(bt):
         fun=fun*cos(bt*ksi)
         return fun
 
-    return integrate.quad(integrand, a, c, args=(bt),limit=100,epsrel=1.49e-015)[0]
-
-def polint2(bt):
-    global a,c,pol
-    summ=0
-    for j in range(0,len(pol)):
-        sum2=0
-        for i in range(0,j):
-            sum2+=pohgamer(j,i)/(bt**(1+i))*(-1)*(i/2)*(c**(j-i)*sin(bt*c+(pi/2)**(i%2))-a**(j-i)*sin(bt*a+(pi/2)**(i%2)))
-        summ+=pol[j]*sum2
-    return summ
+    return integrate.quad(integrand, a, c, args=(bt),limit=100,epsabs=1.49e-08,epsrel=1.49e-08, wopts="momcom")[0]
 
 def pohgamer(j,i):
     poh=1
@@ -60,7 +50,6 @@ def pohgamer(j,i):
 
 
 def drawSinCosWaves():
-    d=10000
     global a, st, G, lbd, ym, kp, c
     xv=np.arange(0,2*(a+st/2),0.1/2)
     mass=-ym*(lbd+2*G)*b/G*(kp-1)/(kp+1)
