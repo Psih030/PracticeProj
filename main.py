@@ -11,7 +11,7 @@ G=1.67
 lbd=8332.2
 ym=15
 kp=1.0004
-pol=[1,2,3,4,5]
+pol=[0,10]
 var=1
 var2=1
 
@@ -24,29 +24,24 @@ def integr(x):
         if var==1:
             fun=polint(bt)*cos(bt*x)*(lbd+2*G)*(exp(bt*b)*(kp**2-1-2*bt*b+2*kp*bt*b)+exp(-bt*b)*(kp**2-1+2*bt*b-2*kp*bt*b))/((kp-1)*(lbd*(kp*exp(2*bt*b)+kp*exp(-2*bt*b)+2)+G*kp*(exp(2*bt*b)+exp(-2*bt*b)))+2*G*(kp**2+kp+4*bt**2 * b **2 -2))
         elif var==2:
-            fun=polint(bt)*(G*(exp(bt*b)*(kp**2-kp+2*kp*bt*b)-exp(-bt*b)*(kp**2-kp-2*kp*bt*b))+lbd*(kp**2-kp)*(exp(bt*b)-exp(-bt*b)))*cos(bt*x)/((kp**2-kp)*(lbd+G)*sinh(2*bt*b)+4*kp*G*b*bt)
+            fun=polint(bt)*cos(bt*x)*(G*(exp(bt*b)*(kp**2-kp+2*kp*bt*b)-exp(-bt*b)*(kp**2-kp-2*kp*bt*b))+lbd*(kp**2-kp)*(exp(bt*b)-exp(-bt*b)))/((kp**2-kp)*(lbd+G)*sinh(2*bt*b)+4*kp*G*b*bt)
         return fun
 
-    return integrate.quad(integrand, 0,7,args=(x),limit=70,epsabs=1.49e-08,epsrel=1.49e-08,wopts="momcom")
+    return integrate.quad(integrand, 0,7,args=(x),limit=70,epsabs=1.49e-012,epsrel=1.49e-011,wopts="momcom")
 
 
 def polint(bt):
     global a,c
     def integrand(ksi,bt):
         global pol
-        fun=0
-        for i in range(0,len(pol)):
-            fun+=pol[i]*ksi**i
+        fun=pol[len(pol)-1]
+        for i in range(0,len(pol)-1):
+            fun *= ksi
+            fun += pol[len(pol)-2-i]
         fun=fun*cos(bt*ksi)
         return fun
 
-    return integrate.quad(integrand, a, c, args=(bt),limit=100,epsabs=1.49e-08,epsrel=1.49e-08, wopts="momcom")[0]
-
-def pohgamer(j,i):
-    poh=1
-    for k in range(0,i):
-        poh=poh*(j+1-i+k)
-    return poh
+    return integrate.quad(integrand, a, c, args=(bt),limit=100,epsabs=1.49e-011,epsrel=1.49e-011, wopts="momcom")[0]
 
 
 def drawSinCosWaves():
@@ -58,7 +53,6 @@ def drawSinCosWaves():
     for i in range(0,xv.shape[0]):
         x=np.float64(xv[i,0])
         nagr[i]=-2/pi/G*integr(x)[0]
-
     if var2==1:
         xv[:,1]=nagr
     if var2==2:
@@ -160,10 +154,10 @@ class MyChild(wx.Frame):
             G=E/(2*(1-mu))
             lbd=mu*E/((1+mu)*(1-2*mu))
             kp=3-4*mu
+        pol=[]
         pold=self.editp.GetValue().split()
         for i in range(0,len(pold)):
-            print pold[i]
-            pol[i]=float(pold[i])
+            pol.append(float(pold[i]))
         if self.rbox.GetStringSelection()=="of fixed":
             var=1
         elif self.rbox.GetStringSelection()=="of smooth":
